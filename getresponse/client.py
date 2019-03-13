@@ -247,7 +247,7 @@ class GetResponse(object):
         """
         return self._request('/contacts/{}'.format(contact_id), ObjType.CONTACT, HttpMethod.DELETE, payload=params)
 
-    def get_custom_fields(self, params):
+    def get_custom_fields(self, params=None):
         """Retrieve custom fields for contacts
 
                 Args:
@@ -355,13 +355,13 @@ class GetResponse(object):
             if response.status_code == 400 or response.status_code == 409:
                 error = response.json()
                 if error['code'] == 1000:
-                    raise ValidationError(error['message'])
+                    raise ValidationError(error['message'], response=error)
                 if error['code'] == 1001:
-                    raise NotFoundError(error['message'])
+                    raise NotFoundError(error['message'], response=error)
                 if error['code'] == 1002:
-                    raise ForbiddenError(error['message'])
+                    raise ForbiddenError(error['message'], response=error)
                 if error['code'] == 1008:
-                    raise UniquePropertyError(error['message'])
+                    raise UniquePropertyError(error['message'], response=error)
                 raise Exception(error['message'])
             if response.status_code == 202:
                 # Respuesta exitosa para un objeto que no se crea inmediatamente.
@@ -389,3 +389,10 @@ class GetResponse(object):
         else:
             return data
         return obj
+
+
+class GetResponseEnterprise(GetResponse):
+    def __init__(self, api_key, api_domain, api_base_url='https://api3.getresponse360.com/v3', **kwargs):
+        super().__init__(api_key, **kwargs)
+        self.API_BASE_URL = api_base_url
+        self.session.headers.update({'X-Domain': api_domain})
